@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LKPD Interaktif: Sudut Pusat dan Sudut Keliling Lingkaran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef3f8; --grid:#d9e3ee; --surface:#ffffff; --soft:#e6eef7; --ink:#14263f; --muted:#51647c; --line:#c4d2e2;
+  --central:#c2255c; --inscribed:#0b7285; --arc:#d9730d; --c2:#7048e8; --c3:#2f9e44;
+  --ok:#2b8a3e; --okbg:#e6f4ea; --bad:#c92a2a; --badbg:#fdecec; --focus:#1c7ed6;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0e1a29; --grid:#16283b; --surface:#142235; --soft:#1b2e45; --ink:#e8eef6; --muted:#9fb1c6; --line:#2b4058;
+    --central:#ff6b9a; --inscribed:#3bc9db; --arc:#ffa94d; --c2:#9775fa; --c3:#69db7c;
+    --ok:#69db7c; --okbg:#143222; --bad:#ff8787; --badbg:#3a1a1c; --focus:#74c0fc;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; font-family:"Lexend","Segoe UI",system-ui,-apple-system,sans-serif; font-size:16px; line-height:1.65;
+  color:var(--ink); background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} *{transition:none!important;animation:none!important} }
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.wrap{max-width:940px;margin:0 auto;padding:0 18px 90px}
+
+/* progress */
+.prog{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.prog .in{max-width:940px;margin:0 auto;padding:8px 18px;display:flex;align-items:center;gap:12px;font-size:.85rem}
+.prog .bar{flex:1;height:8px;border-radius:99px;background:var(--soft);overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .35s}
+.prog b{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* hero */
+.hero{display:grid;gap:22px;padding:34px 0 8px;align-items:center}
+@media (min-width:760px){.hero{grid-template-columns:1.25fr .75fr}}
+h1{font-size:clamp(1.9rem,5.4vw,2.8rem);line-height:1.12;margin:0 0 10px;letter-spacing:-.01em}
+.sub{margin:0;color:var(--muted)}
+.hero svg{width:100%;max-width:320px;height:auto;justify-self:center;background:var(--surface);border:1px solid var(--line);border-radius:18px}
+.goals{margin:18px 0 0;padding-left:1.2rem}
+.goals li{margin-bottom:4px}
+.idgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+@media (max-width:520px){.idgrid{grid-template-columns:1fr}}
+.idgrid label{display:block;font-size:.85rem;color:var(--muted)}
+.txt,textarea{width:100%;font:inherit;padding:9px 12px;border:2px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+textarea{resize:vertical;min-height:84px}
+
+/* sections */
+h2{font-size:1.4rem;line-height:1.25;margin:0 0 6px;display:flex;gap:12px;align-items:flex-start}
+h2 .n{flex:none;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:1.05rem;font-weight:700;margin-top:-2px}
+section{margin-top:56px}
+.steps{margin:8px 0 18px;padding-left:1.3rem}
+.steps li{margin-bottom:2px}
+.lead{margin:0 0 12px;color:var(--muted)}
+
+/* reference */
+details.ref{margin-top:26px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:4px 16px}
+details.ref summary{cursor:pointer;font-weight:600;padding:10px 0}
+details.ref .cont{padding:0 0 12px}
+details.ref h3{font-size:1rem;margin:14px 0 4px}
+details.ref p{margin:4px 0}
+.fx{display:inline-block;padding:2px 10px;border-radius:8px;background:var(--soft);font-weight:600}
+
+/* explorer */
+.explorer{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin:14px 0 20px}
+.lab{display:grid;gap:16px}
+@media (min-width:780px){.lab{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}}
+.fig{width:100%;height:auto;display:block;touch-action:none;background:var(--surface);border-radius:14px}
+.cap{margin:6px 2px 0;font-size:.85rem;color:var(--muted)}
+.h{cursor:grab;outline:none}
+.h:active{cursor:grabbing}
+.h:focus-visible .ring{stroke-width:6}
+.pl{font-weight:700;font-size:17px;fill:var(--ink)}
+.deg{font-size:13px;font-weight:700;paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.ro{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--soft);margin-bottom:6px}
+.ro .sw{flex:none;width:14px;height:14px;border-radius:4px}
+.ro .k{flex:1;font-size:.9rem}
+.ro b{font-size:1.15rem;font-variant-numeric:tabular-nums;text-align:right}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+.sl{display:flex;flex-direction:column;gap:2px;flex:1 1 220px;font-size:.88rem}
+.sl input{width:100%;accent-color:var(--central)}
+.rec{margin-top:8px}
+.tw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center}
+.tbl th{font-weight:600;color:var(--muted)}
+.tbl .empty{color:var(--muted);text-align:left}
+
+/* buttons */
+.btn{font:inherit;font-weight:600;padding:9px 16px;border-radius:8px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.sm{padding:6px 12px;font-size:.88rem}
+.btn:hover{opacity:.9}
+
+/* questions */
+.q{margin:16px 0;padding:14px 16px;border-radius:10px;background:var(--soft);border-left:5px solid var(--muted)}
+.q.done{border-left-color:var(--ok)}
+.q .qt{margin:0 0 10px;font-weight:500}
+.q .fields{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-bottom:10px}
+.q .row{display:flex;gap:10px;align-items:center;justify-content:space-between;width:100%;padding:6px 0;border-bottom:1px dashed var(--line)}
+.q .row span{flex:1}
+.num{width:4.6em;text-align:center;font:inherit;font-weight:600;padding:6px 8px;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+select{font:inherit;padding:6px 8px;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);max-width:100%}
+.num.ok,select.ok{border-color:var(--ok);background:var(--okbg)}
+.num.bad,select.bad{border-color:var(--bad);background:var(--badbg)}
+.opts{display:grid;gap:8px;margin-bottom:8px}
+.opt{font:inherit;text-align:left;padding:10px 14px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg);opacity:.8}
+.qa{display:flex;gap:8px;flex-wrap:wrap}
+.fb{margin-top:8px;font-weight:600;min-height:1.2em}
+.fb.good{color:var(--ok)}
+.fb.miss{color:var(--bad)}
+.hint,.reveal{margin-top:8px;padding:10px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-size:.93rem}
+.reveal{border-color:var(--ok)}
+.work{margin-bottom:10px}
+.pair{display:grid;gap:14px}
+@media (min-width:780px){.pair{grid-template-columns:minmax(0,260px) minmax(0,1fr);align-items:start}}
+
+/* reflection */
+fieldset.rate{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;padding:10px 14px;background:var(--surface)}
+fieldset.rate legend{padding:0 6px;font-weight:500}
+fieldset.rate label{display:inline-flex;gap:6px;align-items:center;margin:4px 14px 4px 0;cursor:pointer}
+.sumbox{width:100%;min-height:200px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem}
+.note{font-size:.85rem;color:var(--muted)}
+
+/* teacher */
+details.teacher{margin-top:48px;border:2px dashed var(--line);border-radius:12px;padding:4px 16px;background:var(--surface)}
+details.teacher summary{cursor:pointer;font-weight:600;padding:10px 0}
+.teacher table{width:100%;border-collapse:collapse;font-size:.88rem;margin:8px 0 16px}
+.teacher th,.teacher td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.teacher th{background:var(--soft)}
+
+@media print{
+  .prog,.ctl,.qa,.rec .btn,.hint{display:none!important}
+  body{background:#fff;color:#000}
+  section{break-inside:avoid-page}
+}
+</style>
+</head>
+<body>
+
+<div class="prog" aria-live="polite">
+  <div class="in">
+    <span>Jawaban benar</span>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="barfill"></i></div>
+    <b id="proglabel">0 dari 0</b>
+  </div>
+</div>
+
+<div class="wrap">
+
+<header class="hero">
+  <div>
+    <h1>Sudut Pusat dan Sudut Keliling Lingkaran</h1>
+    <p class="sub">LKPD interaktif Matematika kelas XI, Fase F</p>
+    <ol class="goals">
+      <li>Memahami pengertian sudut pusat dan sudut keliling beserta unsur pembentuknya.</li>
+      <li>Menentukan hubungan sudut pusat dan sudut keliling yang menghadap busur yang sama.</li>
+      <li>Menganalisis dan menerapkan sifat sudut keliling untuk memecahkan masalah geometri.</li>
+    </ol>
+  </div>
+  <svg id="hero" viewBox="0 0 400 390" role="img" aria-label="Lingkaran dengan sudut pusat AOB dan sudut keliling ACB yang menghadap busur AB"></svg>
+</header>
+
+<div class="idgrid">
+  <label>Nama<input class="txt" id="nm" autocomplete="name"></label>
+  <label>Kelas<input class="txt" id="kl"></label>
+  <label>Kelompok<input class="txt" id="kp"></label>
+  <label>Tanggal<input class="txt" id="tg"></label>
+</div>
+
+<details class="ref">
+  <summary>Ringkasan materi (buka kalau butuh pengingat)</summary>
+  <div class="cont">
+    <h3>Sudut pusat</h3>
+    <p>Titik sudutnya tepat di titik pusat lingkaran, kaki sudutnya dua jari-jari. Contoh: ∠AOB menghadap busur AB.</p>
+    <h3>Sudut keliling</h3>
+    <p>Titik sudutnya pada keliling lingkaran, kaki sudutnya dua tali busur. Contoh: ∠ACB menghadap busur AB.</p>
+    <h3>Hubungan keduanya (menghadap busur yang sama)</h3>
+    <p><span class="fx">∠AOB = 2 × ∠ACB</span> atau <span class="fx">∠ACB = ½ × ∠AOB</span></p>
+    <h3>Empat sifat sudut keliling</h3>
+    <p>1. Sudut keliling yang menghadap busur yang sama besarnya sama.</p>
+    <p>2. Sudut keliling yang menghadap diameter besarnya 90°.</p>
+    <p>3. Busur sama panjang menghasilkan sudut keliling yang sama besar.</p>
+    <p>4. Pada segi empat tali busur, sudut yang berhadapan berjumlah 180°.</p>
+  </div>
+</details>
+
+<!-- ========== KEGIATAN 1 ========== -->
+<section id="k1">
+  <h2><span class="n">1</span>Kenali dua jenis sudut dan temukan hubungannya</h2>
+
+  <div class="q" data-id="k1a" data-type="fields">
+    <p class="qt">Tentukan jenis sudut yang dimaksud pada tiap pernyataan.</p>
+    <div class="fields">
+      <div class="row"><span>Titik sudutnya berada tepat di titik pusat lingkaran.</span>
+        <select data-ans="pusat" aria-label="Pernyataan 1"><option value="">Pilih</option><option value="pusat">Sudut pusat</option><option value="keliling">Sudut keliling</option></select></div>
+      <div class="row"><span>Kaki-kaki sudutnya berupa tali busur.</span>
+        <select data-ans="keliling" aria-label="Pernyataan 2"><option value="">Pilih</option><option value="pusat">Sudut pusat</option><option value="keliling">Sudut keliling</option></select></div>
+      <div class="row"><span>Titik sudutnya berada pada lengkungan lingkaran.</span>
+        <select data-ans="keliling" aria-label="Pernyataan 3"><option value="">Pilih</option><option value="pusat">Sudut pusat</option><option value="keliling">Sudut keliling</option></select></div>
+      <div class="row"><span>Kedua kaki sudutnya adalah jari-jari lingkaran.</span>
+        <select data-ans="pusat" aria-label="Pernyataan 4"><option value="">Pilih</option><option value="pusat">Sudut pusat</option><option value="keliling">Sudut keliling</option></select></div>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Lihat dua kata kunci: di mana titik sudutnya berada, dan apa kaki sudutnya.</div>
+    <div class="reveal" hidden>Sudut pusat: titik sudut di pusat, kaki sudut berupa jari-jari. Sudut keliling: titik sudut di lengkung lingkaran, kaki sudut berupa tali busur.</div>
+  </div>
+
+  <p class="lead">Sekarang selidiki sendiri. Titik O adalah pusat lingkaran, ∠AOB sudut pusat, dan ∠ACB sudut keliling.</p>
+  <ol class="steps">
+    <li>Geser titik C di sepanjang busur besar. Perhatikan ∠ACB.</li>
+    <li>Ubah ∠AOB dengan penggeser, lalu amati ∠ACB.</li>
+    <li>Tekan “Catat pengamatan” minimal 3 kali, dengan ∠AOB yang berbeda-beda.</li>
+  </ol>
+
+  <div class="explorer" id="ex1" data-mode="central"></div>
+
+  <div class="q" data-id="k1b" data-type="choice" data-ans="b">
+    <p class="qt">Saat kamu menggeser titik C tanpa mengubah penggeser, apa yang terjadi pada ∠ACB?</p>
+    <div class="opts">
+      <button type="button" class="opt" data-v="a">Membesar ketika C mendekati A</button>
+      <button type="button" class="opt" data-v="b">Tetap sama</button>
+      <button type="button" class="opt" data-v="c">Selalu 90°</button>
+    </div>
+    <div class="fb" role="status"></div>
+    <div class="reveal" hidden>Semua posisi C pada busur besar sama-sama menghadap busur AB, sehingga ∠ACB tidak berubah. Ini yang akan kamu uji lebih jauh di Kegiatan 2.</div>
+  </div>
+
+  <div class="q" data-id="k1c" data-type="fields">
+    <p class="qt">Lihat kolom terakhir pada tabel pengamatanmu, lalu lengkapi. Pecahan boleh ditulis seperti 1/3.</p>
+    <div class="fields">
+      <span>∠AOB =</span><input class="num" inputmode="decimal" data-ans="2" aria-label="Pengali sudut keliling"><span>× ∠ACB</span>
+      <span>dan ∠ACB =</span><input class="num" inputmode="decimal" data-ans="0.5" aria-label="Pengali sudut pusat"><span>× ∠AOB</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Bagi ∠AOB dengan ∠ACB pada setiap baris tabelmu. Hasilnya selalu sama, bukan?</div>
+    <div class="reveal" hidden>Jika menghadap busur yang sama: sudut pusat = 2 × sudut keliling, dan sudut keliling = ½ × sudut pusat.</div>
+  </div>
+
+  <div class="q" data-id="k1d" data-type="fields">
+    <p class="qt">Terapkan hubungan itu. Kedua sudut menghadap busur yang sama.</p>
+    <div class="fields">
+      <span>(a) ∠ACB = 47°, maka ∠AOB =</span><input class="num" inputmode="decimal" data-ans="94" aria-label="Jawaban a"><span>°</span>
+    </div>
+    <div class="fields">
+      <span>(b) ∠AOB = 130°, maka ∠ACB =</span><input class="num" inputmode="decimal" data-ans="65" aria-label="Jawaban b"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Pada (a) kalikan 2. Pada (b) bagi 2.</div>
+    <div class="reveal" hidden>(a) ∠AOB = 2 × 47° = 94°. (b) ∠ACB = ½ × 130° = 65°.</div>
+  </div>
+</section>
+
+<!-- ========== KEGIATAN 2 ========== -->
+<section id="k2">
+  <h2><span class="n">2</span>Sudut keliling yang menghadap busur yang sama</h2>
+  <ol class="steps">
+    <li>Geser titik C, D, dan E ke posisi mana saja pada busur besar.</li>
+    <li>Ubah ∠AOB dengan penggeser, lalu bandingkan ketiga sudut keliling.</li>
+  </ol>
+
+  <div class="explorer" id="ex2" data-mode="same"></div>
+
+  <div class="q" data-id="k2a" data-type="choice" data-ans="a">
+    <p class="qt">Apa kesimpulanmu tentang ∠ACB, ∠ADB, dan ∠AEB?</p>
+    <div class="opts">
+      <button type="button" class="opt" data-v="a">Ketiganya sama besar, yaitu setengah dari ∠AOB</button>
+      <button type="button" class="opt" data-v="b">Titik yang paling dekat dengan A menghasilkan sudut terbesar</button>
+      <button type="button" class="opt" data-v="c">Jumlah ketiganya sama dengan ∠AOB</button>
+    </div>
+    <div class="fb" role="status"></div>
+    <div class="reveal" hidden>Sudut keliling yang menghadap busur yang sama besarnya sama, dan masing-masing setengah dari sudut pusat yang menghadap busur itu (Sifat 1).</div>
+  </div>
+
+  <div class="q" data-id="k2b" data-type="fields">
+    <p class="qt">Jika ∠AOB = 84°, tentukan:</p>
+    <div class="fields">
+      <span>∠ADB =</span><input class="num" inputmode="decimal" data-ans="42" aria-label="Besar sudut ADB"><span>°</span>
+      <span>dan ∠ACB + ∠AEB =</span><input class="num" inputmode="decimal" data-ans="84" aria-label="Jumlah sudut ACB dan AEB"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Cari satu sudut keliling lebih dulu. Sudut keliling lainnya sama besar dengannya.</div>
+    <div class="reveal" hidden>∠ADB = ½ × 84° = 42°. ∠ACB dan ∠AEB juga 42°, sehingga jumlahnya 84°.</div>
+  </div>
+
+  <div class="q" data-id="k2c" data-type="fields">
+    <p class="qt">Pada sebuah lingkaran, busur PQ dan busur RS sama panjang. Titik T dan U terletak pada keliling lingkaran, dan ∠PTQ = 36°.</p>
+    <div class="fields">
+      <span>∠RUS =</span><input class="num" inputmode="decimal" data-ans="36" aria-label="Besar sudut RUS"><span>°</span>
+    </div>
+    <div class="fields">
+      <span>Alasannya:</span>
+      <select data-ans="a" aria-label="Alasan">
+        <option value="">Pilih alasan</option>
+        <option value="a">Busur sama panjang punya sudut pusat sama, sehingga sudut kelilingnya sama</option>
+        <option value="b">Kedua sudut menghadap diameter, jadi sama-sama 90°</option>
+        <option value="c">Kedua sudut saling berpelurus</option>
+      </select>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Pikirkan sudut pusat yang menghadap busur PQ dan busur RS. Bagaimana besarnya?</div>
+    <div class="reveal" hidden>Busur PQ dan RS sama panjang, maka sudut pusatnya sama. Sudut keliling = ½ × sudut pusat, sehingga ∠RUS = ∠PTQ = 36° (Sifat 3).</div>
+  </div>
+</section>
+
+<!-- ========== KEGIATAN 3 ========== -->
+<section id="k3">
+  <h2><span class="n">3</span>Sudut keliling yang menghadap diameter</h2>
+  <p class="lead">Di sini AB adalah diameter. Geser titik C ke mana saja pada lingkaran dan amati ∠ACB.</p>
+
+  <div class="explorer" id="ex3" data-mode="diameter"></div>
+
+  <div class="q" data-id="k3a" data-type="fields">
+    <p class="qt">Lengkapi hasil pengamatanmu.</p>
+    <div class="fields">
+      <span>∠ACB selalu</span><input class="num" inputmode="decimal" data-ans="90" aria-label="Besar sudut ACB"><span>°</span>
+      <span>dan ∠CAB + ∠ABC =</span><input class="num" inputmode="decimal" data-ans="90" aria-label="Jumlah sudut CAB dan ABC"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Lihat dua baris pertama pada panel pengukuran, lalu jumlahkan dua sudut lainnya.</div>
+    <div class="reveal" hidden>∠ACB = 90°. Jumlah sudut segitiga ABC adalah 180°, sehingga ∠CAB + ∠ABC = 180° − 90° = 90°.</div>
+  </div>
+
+  <div class="q" data-id="k3b" data-type="choice" data-ans="a">
+    <p class="qt">Mengapa ∠ACB selalu 90°?</p>
+    <div class="opts">
+      <button type="button" class="opt" data-v="a">Diameter menghadap sudut pusat 180°, dan sudut keliling = ½ × 180° = 90°</button>
+      <button type="button" class="opt" data-v="b">Diameter selalu dua kali jari-jari, jadi sudutnya 90°</button>
+      <button type="button" class="opt" data-v="c">Sudut keliling selalu sama dengan sudut pusat</button>
+    </div>
+    <div class="fb" role="status"></div>
+    <div class="reveal" hidden>Diameter membentuk sudut pusat berupa garis lurus (180°). Sudut keliling yang menghadap busur yang sama besarnya setengah dari itu, yaitu 90° (Sifat 2).</div>
+  </div>
+
+  <div class="q" data-id="k3c" data-type="fields">
+    <p class="qt">AB diameter dan C pada keliling. Jika ∠CAB = 52°, tentukan ∠ABC.</p>
+    <div class="fields">
+      <span>∠ABC =</span><input class="num" inputmode="decimal" data-ans="38" aria-label="Besar sudut ABC"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Segitiga ABC mempunyai satu sudut siku-siku. Di titik mana?</div>
+    <div class="reveal" hidden>∠ACB = 90°, maka ∠ABC = 180° − 90° − 52° = 38°.</div>
+  </div>
+</section>
+
+<!-- ========== KEGIATAN 4 ========== -->
+<section id="k4">
+  <h2><span class="n">4</span>Segi empat tali busur</h2>
+  <ol class="steps">
+    <li>Geser keempat titik sudut A, B, C, D di sepanjang lingkaran.</li>
+    <li>Tekan “Catat pengamatan” minimal 3 kali dengan bentuk segi empat yang berbeda.</li>
+  </ol>
+
+  <div class="explorer" id="ex4" data-mode="cyclic"></div>
+
+  <div class="q" data-id="k4a" data-type="fields">
+    <p class="qt">Dari tabel pengamatanmu, lengkapi sifat sudut yang berhadapan.</p>
+    <div class="fields">
+      <span>∠A + ∠C =</span><input class="num" inputmode="decimal" data-ans="180" aria-label="Jumlah sudut A dan C"><span>°</span>
+      <span>dan ∠B + ∠D =</span><input class="num" inputmode="decimal" data-ans="180" aria-label="Jumlah sudut B dan D"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Lihat kolom jumlah pada tabel. Apakah nilainya berubah ketika bentuk segi empat berubah?</div>
+    <div class="reveal" hidden>Pada segi empat tali busur, sudut yang saling berhadapan berjumlah 180° (saling berpelurus) (Sifat 4).</div>
+  </div>
+
+  <div class="q" data-id="k4b" data-type="fields">
+    <p class="qt">WXYZ adalah segi empat tali busur dengan ∠X = 72° dan ∠Y = 95°.</p>
+    <div class="fields">
+      <span>∠Z =</span><input class="num" inputmode="decimal" data-ans="108" aria-label="Besar sudut Z"><span>°</span>
+      <span>dan ∠W =</span><input class="num" inputmode="decimal" data-ans="85" aria-label="Besar sudut W"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Cari dulu sudut yang berhadapan dengan ∠X, lalu dengan ∠Y. Urutan titiknya W, X, Y, Z.</div>
+    <div class="reveal" hidden>∠X berhadapan dengan ∠Z: ∠Z = 180° − 72° = 108°. ∠Y berhadapan dengan ∠W: ∠W = 180° − 95° = 85°.</div>
+  </div>
+</section>
+
+<!-- ========== LATIHAN ========== -->
+<section id="lat">
+  <h2><span class="n">5</span>Latihan mandiri</h2>
+  <p class="lead">Tuliskan langkah penyelesaianmu di kolom yang tersedia, lalu masukkan jawaban akhir.</p>
+
+  <div class="q" data-id="l1" data-type="fields">
+    <p class="qt">Latihan 1. Suatu sudut pusat dan sudut keliling menghadap busur yang sama. Jumlah kedua sudut itu 135°. Tentukan besar masing-masing sudut.</p>
+    <textarea class="work" data-label="Latihan 1" placeholder="Langkah penyelesaian"></textarea>
+    <div class="fields">
+      <span>Sudut pusat =</span><input class="num" inputmode="decimal" data-ans="90" aria-label="Sudut pusat"><span>°</span>
+      <span>Sudut keliling =</span><input class="num" inputmode="decimal" data-ans="45" aria-label="Sudut keliling"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Misalkan sudut keliling = k. Maka sudut pusat = 2k, dan jumlah keduanya 3k.</div>
+    <div class="reveal" hidden>3k = 135°, jadi k = 45°. Sudut keliling 45° dan sudut pusat 2 × 45° = 90°. Cek: 90° + 45° = 135°.</div>
+  </div>
+
+  <div class="q" data-id="l2" data-type="fields">
+    <p class="qt">Latihan 2. Garis AB adalah diameter lingkaran berpusat di O. Titik C berada pada keliling lingkaran. Jika ∠CAB = 34°, tentukan ∠ABC.</p>
+    <textarea class="work" data-label="Latihan 2" placeholder="Langkah penyelesaian"></textarea>
+    <div class="fields">
+      <span>∠ABC =</span><input class="num" inputmode="decimal" data-ans="56" aria-label="Besar sudut ABC"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Sudut keliling yang menghadap diameter berapa derajat?</div>
+    <div class="reveal" hidden>∠ACB menghadap diameter, jadi 90°. ∠ABC = 180° − 90° − 34° = 56°.</div>
+  </div>
+
+  <div class="q" data-id="l3" data-type="fields">
+    <p class="qt">Latihan 3. Pada segi empat tali busur KLMN, ∠K = (3x + 10)° dan sudut yang berhadapan dengannya, ∠M = (2x + 20)°. Tentukan nilai x dan besar ∠K.</p>
+    <textarea class="work" data-label="Latihan 3" placeholder="Langkah penyelesaian"></textarea>
+    <div class="fields">
+      <span>x =</span><input class="num" inputmode="decimal" data-ans="30" aria-label="Nilai x">
+      <span>∠K =</span><input class="num" inputmode="decimal" data-ans="100" aria-label="Besar sudut K"><span>°</span>
+    </div>
+    <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+    <div class="fb" role="status"></div>
+    <div class="hint" hidden>Sudut yang berhadapan pada segi empat tali busur berjumlah 180°. Buat persamaan dari ∠K + ∠M.</div>
+    <div class="reveal" hidden>(3x + 10) + (2x + 20) = 180, maka 5x = 150 dan x = 30. ∠K = 3(30) + 10 = 100°. Cek: ∠M = 80°, dan 100° + 80° = 180°.</div>
+  </div>
+</section>
+
+<!-- ========== TANTANGAN ========== -->
+<section id="tan">
+  <h2><span class="n">6</span>Tantangan</h2>
+  <p class="lead">Gabungkan beberapa sifat sekaligus.</p>
+  <div class="pair">
+    <svg id="chal" class="fig" viewBox="0 0 400 390" role="img" aria-label="Lingkaran berpusat O dengan diameter AB, titik C pada keliling, dan sudut AOC sebesar 80 derajat"></svg>
+    <div class="q" data-id="t1" data-type="fields" style="margin-top:0">
+      <p class="qt">AB adalah diameter lingkaran berpusat di O, dan C pada keliling lingkaran. Jika ∠AOC = 80°, tentukan ∠ABC dan ∠BAC.</p>
+      <textarea class="work" data-label="Tantangan" placeholder="Sebutkan sifat yang kamu pakai di tiap langkah"></textarea>
+      <div class="fields">
+        <span>∠ABC =</span><input class="num" inputmode="decimal" data-ans="40" aria-label="Besar sudut ABC"><span>°</span>
+        <span>∠BAC =</span><input class="num" inputmode="decimal" data-ans="50" aria-label="Besar sudut BAC"><span>°</span>
+      </div>
+      <div class="qa"><button type="button" class="btn check">Periksa</button><button type="button" class="btn ghost hintbtn">Petunjuk</button></div>
+      <div class="fb" role="status"></div>
+      <div class="hint" hidden>∠AOC dan ∠ABC menghadap busur yang sama. Lalu ingat sudut keliling yang menghadap diameter.</div>
+      <div class="reveal" hidden>∠ABC = ½ × ∠AOC = 40° (hubungan sudut pusat dan sudut keliling). ∠ACB = 90° karena menghadap diameter. ∠BAC = 180° − 90° − 40° = 50°.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== REFLEKSI ========== -->
+<section id="ref">
+  <h2><span class="n">7</span>Refleksi dan hasil</h2>
+  <fieldset class="rate"><legend>Aku dapat membedakan sudut pusat dan sudut keliling.</legend>
+    <label><input type="radio" name="r1" value="Sudah paham"> Sudah paham</label>
+    <label><input type="radio" name="r1" value="Hampir paham"> Hampir paham</label>
+    <label><input type="radio" name="r1" value="Perlu belajar lagi"> Perlu belajar lagi</label></fieldset>
+  <fieldset class="rate"><legend>Aku dapat menentukan hubungan sudut pusat dan sudut keliling.</legend>
+    <label><input type="radio" name="r2" value="Sudah paham"> Sudah paham</label>
+    <label><input type="radio" name="r2" value="Hampir paham"> Hampir paham</label>
+    <label><input type="radio" name="r2" value="Perlu belajar lagi"> Perlu belajar lagi</label></fieldset>
+  <fieldset class="rate"><legend>Aku dapat memakai sifat sudut keliling untuk menyelesaikan soal.</legend>
+    <label><input type="radio" name="r3" value="Sudah paham"> Sudah paham</label>
+    <label><input type="radio" name="r3" value="Hampir paham"> Hampir paham</label>
+    <label><input type="radio" name="r3" value="Perlu belajar lagi"> Perlu belajar lagi</label></fieldset>
+
+  <p style="margin:14px 0 4px">Satu hal baru yang kupelajari hari ini:</p>
+  <textarea id="rf1"></textarea>
+  <p style="margin:14px 0 4px">Bagian yang masih membingungkan:</p>
+  <textarea id="rf2"></textarea>
+
+  <p style="margin:18px 0 8px"><button type="button" class="btn" id="mk">Buat ringkasan hasil</button>
+  <button type="button" class="btn ghost" id="cp" hidden>Salin ringkasan</button></p>
+  <textarea id="sum" class="sumbox" readonly hidden aria-label="Ringkasan hasil"></textarea>
+  <p class="note" id="cpmsg" role="status"></p>
+</section>
+
+<details class="teacher">
+  <summary>Untuk guru: kunci jawaban, rubrik, dan catatan penggunaan</summary>
+  <h3>Kunci jawaban</h3>
+  <table>
+    <tr><th>Bagian</th><th>Jawaban</th></tr>
+    <tr><td>Kegiatan 1, jenis sudut</td><td>pusat, keliling, keliling, pusat</td></tr>
+    <tr><td>Kegiatan 1, hubungan</td><td>∠ACB tetap sama; ∠AOB = 2 × ∠ACB; ∠ACB = ½ × ∠AOB; (a) 94°, (b) 65°</td></tr>
+    <tr><td>Kegiatan 2</td><td>Ketiganya sama besar, ½ × ∠AOB; ∠ADB = 42° dan jumlah 84°; ∠RUS = 36° (busur sama panjang)</td></tr>
+    <tr><td>Kegiatan 3</td><td>∠ACB = 90°; ∠CAB + ∠ABC = 90°; alasan: ½ × 180°; ∠ABC = 38°</td></tr>
+    <tr><td>Kegiatan 4</td><td>∠A + ∠C = 180°, ∠B + ∠D = 180°; ∠Z = 108°, ∠W = 85°</td></tr>
+    <tr><td>Latihan 1</td><td>Sudut pusat 90°, sudut keliling 45°</td></tr>
+    <tr><td>Latihan 2</td><td>∠ABC = 56°</td></tr>
+    <tr><td>Latihan 3</td><td>x = 30, ∠K = 100°</td></tr>
+    <tr><td>Tantangan</td><td>∠ABC = 40°, ∠BAC = 50°</td></tr>
+  </table>
+  <h3>Rubrik penilaian (skala 1 sampai 4)</h3>
+  <table>
+    <tr><th>Aspek</th><th>4</th><th>3</th><th>2</th><th>1</th></tr>
+    <tr><td>Pemahaman konsep</td><td>Membedakan kedua sudut dan menyatakan hubungannya dengan tepat</td><td>Hubungan tepat, istilah kadang tertukar</td><td>Hubungan hanya sebagian tepat</td><td>Belum dapat menyatakan hubungan</td></tr>
+    <tr><td>Eksplorasi dan pengamatan</td><td>Mencatat 3 pengamatan atau lebih yang bervariasi dan menyimpulkan sendiri</td><td>Mencatat 3 pengamatan atau lebih, simpulan dibantu</td><td>Mencatat kurang dari 3 pengamatan</td><td>Tidak mencatat</td></tr>
+    <tr><td>Penyelesaian soal</td><td>Langkah runtut, sifat disebutkan, jawaban benar</td><td>Jawaban benar, alasan kurang lengkap</td><td>Langkah benar sebagian</td><td>Langkah dan jawaban belum tepat</td></tr>
+    <tr><td>Refleksi</td><td>Menyebut hal baru dan bagian sulit secara spesifik</td><td>Salah satunya spesifik</td><td>Jawaban masih umum</td><td>Tidak diisi</td></tr>
+  </table>
+  <h3>Catatan penggunaan</h3>
+  <p class="note">LKPD dapat dikerjakan individu atau berkelompok. Halaman ini tidak menyimpan data ke server: siswa menekan “Buat ringkasan hasil”, menyalinnya, lalu mengirimkan ke guru (misalnya lewat WhatsApp atau Google Classroom). Jawaban otomatis diperiksa, dan pembahasan terbuka setelah jawaban benar atau setelah 3 kali percobaan keliru.</p>
+</details>
+
+</div>
+
+<script>
+(function(){
+  /* ---------- geometri dasar ---------- */
+  var CX=200, CY=200, R=135;
+  var rad=function(d){return d*Math.PI/180}, deg=function(r){return r*180/Math.PI};
+  var norm=function(d){return ((d%360)+360)%360};
+  var P=function(t,r){r=r||R;return {x:CX+r*Math.cos(rad(t)),y:CY-r*Math.sin(rad(t))}};
+  var O={x:CX,y:CY};
+  var num=function(n){var v=Math.round(n*10)/10;return Number.isInteger(v)?String(v):v.toFixed(1).replace('.',',')};
+  var fmt=function(n){return num(n)+'°'};
+  function angleAt(p,q1,q2){
+    var a=[q1.x-p.x,q1.y-p.y], b=[q2.x-p.x,q2.y-p.y];
+    var c=(a[0]*b[0]+a[1]*b[1])/(Math.hypot(a[0],a[1])*Math.hypot(b[0],b[1]));
+    return deg(Math.acos(Math.max(-1,Math.min(1,c))));
+  }
+  var CEN='var(--central)', C1='var(--inscribed)', C2='var(--c2)', C3='var(--c3)', ARC='var(--arc)';
+
+  /* ---------- elemen SVG ---------- */
+  function ring(){return '<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" style="fill:var(--soft);fill-opacity:.5;stroke:var(--ink);stroke-width:2.5"/>'}
+  function line(p,q,col,w,dash){
+    return '<line x1="'+p.x+'" y1="'+p.y+'" x2="'+q.x+'" y2="'+q.y+'" style="stroke:'+col+';stroke-width:'+(w||2.5)+';stroke-linecap:round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+  }
+  function labelPos(p,off){
+    var dx=p.x-CX, dy=p.y-CY, L=Math.hypot(dx,dy)||1;
+    return {x:p.x+dx/L*off, y:p.y+dy/L*off+5};
+  }
+  function dot(p,name,col){
+    var l=labelPos(p,19);
+    return '<circle cx="'+p.x+'" cy="'+p.y+'" r="5" style="fill:'+col+'"/><text class="pl" x="'+l.x+'" y="'+l.y+'" text-anchor="middle">'+name+'</text>';
+  }
+  function dotO(){
+    return '<circle cx="'+CX+'" cy="'+CY+'" r="4.5" style="fill:var(--ink)"/><text class="pl" x="'+CX+'" y="'+(CY+24)+'" text-anchor="middle">O</text>';
+  }
+  function handle(i,p,name,col){
+    var l=labelPos(p,24);
+    return '<g class="h" data-h="'+i+'" tabindex="0" role="slider" aria-label="Titik '+name+', geser di sepanjang lingkaran">'
+      +'<circle cx="'+p.x+'" cy="'+p.y+'" r="26" fill="transparent"/>'
+      +'<circle class="ring" cx="'+p.x+'" cy="'+p.y+'" r="12" style="fill:var(--surface);stroke:'+col+';stroke-width:3.5"/>'
+      +'<circle cx="'+p.x+'" cy="'+p.y+'" r="4.5" style="fill:'+col+'"/></g>'
+      +'<text class="pl" x="'+l.x+'" y="'+l.y+'" text-anchor="middle" style="fill:'+col+'">'+name+'</text>';
+  }
+  function wedge(p,q1,q2,rr,col,text){
+    var a1=Math.atan2(q1.y-p.y,q1.x-p.x), a2=Math.atan2(q2.y-p.y,q2.x-p.x);
+    var d=a2-a1; while(d>Math.PI)d-=2*Math.PI; while(d<=-Math.PI)d+=2*Math.PI;
+    var s={x:p.x+rr*Math.cos(a1),y:p.y+rr*Math.sin(a1)}, e={x:p.x+rr*Math.cos(a2),y:p.y+rr*Math.sin(a2)};
+    var m=a1+d/2, tx=p.x+(rr+17)*Math.cos(m), ty=p.y+(rr+17)*Math.sin(m)+4;
+    return '<path d="M'+p.x+' '+p.y+' L'+s.x+' '+s.y+' A'+rr+' '+rr+' 0 0 '+(d>0?1:0)+' '+e.x+' '+e.y+' Z" style="fill:'+col+';fill-opacity:.3;stroke:'+col+';stroke-width:2"/>'
+      +(text?'<text class="deg" x="'+tx+'" y="'+ty+'" text-anchor="middle" style="fill:'+col+'">'+text+'</text>':'');
+  }
+  function arcAB(phi){
+    var A=P(90+phi/2), B=P(90-phi/2);
+    return '<path d="M'+B.x+' '+B.y+' A'+R+' '+R+' 0 0 0 '+A.x+' '+A.y+'" style="fill:none;stroke:'+ARC+';stroke-width:7;stroke-linecap:round"/>';
+  }
+  function arcLabel(){
+    var l=P(90,R+42);
+    return '<text class="pl" x="'+l.x+'" y="'+l.y+'" text-anchor="middle" style="fill:'+ARC+'">busur AB</text>';
+  }
+  function row(col,label,val){
+    return '<div class="ro"><span class="sw" style="background:'+col+'"></span><span class="k">'+label+'</span><b>'+val+'</b></div>';
+  }
+  function unit(from,to){var dx=to.x-from.x, dy=to.y-from.y, L=Math.hypot(dx,dy)||1;return {x:dx/L,y:dy/L}}
+
+  /* ---------- batas gerak titik ---------- */
+  function clampMajor(t,phi){
+    var lo=90+phi/2+8, hi=90-phi/2-8+360;
+    var a=lo+norm(t-lo);
+    if(a<=hi) return a;
+    var m=(hi+lo+360)/2;
+    return a<m?hi:lo;
+  }
+  function clampDiam(t){
+    var a=norm(t);
+    if(a<10) return 10;
+    if(a>350) return 350;
+    if(a>170&&a<190) return a<180?170:190;
+    return a;
+  }
+  function applyCyc(s,i,t){
+    var ts=s.pts, g=22;
+    var prev=i===0?ts[3]-360:ts[i-1], next=i===3?ts[0]+360:ts[i+1];
+    var lo=prev+g, hi=next-g;
+    var c=t+360*Math.round(((lo+hi)/2-t)/360);
+    ts[i]=Math.max(lo,Math.min(hi,c));
+  }
+
+  /* ---------- mode eksplorasi ---------- */
+  var modes={
+    central:{
+      aria:'Lingkaran dengan sudut pusat AOB dan sudut keliling ACB',
+      cap:'Geser titik C di sepanjang busur besar. Geser penggeser untuk mengubah ∠AOB.',
+      slider:'Besar ∠AOB (sudut pusat)',
+      init:function(){return {phi:100,pts:[270]}},
+      reclamp:function(s){s.pts=s.pts.map(function(t){return clampMajor(t,s.phi)})},
+      apply:function(s,i,t){s.pts[0]=clampMajor(t,s.phi)},
+      meas:function(s){
+        var A=P(90+s.phi/2),B=P(90-s.phi/2),C=P(s.pts[0]);
+        return {A:A,B:B,C:C,aob:angleAt(O,A,B),acb:angleAt(C,A,B)};
+      },
+      draw:function(s){
+        var m=this.meas(s), A=m.A,B=m.B,C=m.C;
+        var g=ring()+arcAB(s.phi)+arcLabel()
+          +line(C,A,C1)+line(C,B,C1)+line(O,A,CEN,3.5)+line(O,B,CEN,3.5)
+          +wedge(O,A,B,32,CEN,fmt(m.aob))+wedge(C,A,B,26,C1,fmt(m.acb))
+          +dot(A,'A',ARC)+dot(B,'B',ARC)+dotO()+(s.static?dot(C,'C',C1):handle(0,C,'C',C1));
+        var ro=row(CEN,'∠AOB, sudut pusat',fmt(m.aob))+row(C1,'∠ACB, sudut keliling',fmt(m.acb))+row('var(--ink)','∠AOB ÷ ∠ACB',num(m.aob/m.acb));
+        return {svg:g,ro:ro};
+      },
+      rec:{
+        head:['No.','∠AOB','∠ACB','∠AOB ÷ ∠ACB'],
+        row:function(s,n){var m=modes.central.meas(s);return [n,fmt(m.aob),fmt(m.acb),num(m.aob/m.acb)]}
+      }
+    },
+    same:{
+      aria:'Lingkaran dengan tiga sudut keliling ACB, ADB, dan AEB yang menghadap busur AB',
+      cap:'Geser titik C, D, dan E pada busur besar. Geser penggeser untuk mengubah ∠AOB.',
+      slider:'Besar ∠AOB (sudut pusat)',
+      init:function(){return {phi:110,pts:[235,270,305]}},
+      reclamp:function(s){s.pts=s.pts.map(function(t){return clampMajor(t,s.phi)})},
+      apply:function(s,i,t){s.pts[i]=clampMajor(t,s.phi)},
+      draw:function(s){
+        var A=P(90+s.phi/2),B=P(90-s.phi/2), cols=[C1,C2,C3], nm=['C','D','E'];
+        var X=s.pts.map(function(t){return P(t)});
+        var g=ring()+arcAB(s.phi)+arcLabel()+line(O,A,CEN,2.5,'6 5')+line(O,B,CEN,2.5,'6 5');
+        X.forEach(function(p,k){g+=line(p,A,cols[k])+line(p,B,cols[k])});
+        var aob=angleAt(O,A,B);
+        g+=wedge(O,A,B,32,CEN,fmt(aob));
+        var vals=X.map(function(p){return angleAt(p,A,B)});
+        X.forEach(function(p,k){g+=wedge(p,A,B,24,cols[k],fmt(vals[k]))});
+        g+=dot(A,'A',ARC)+dot(B,'B',ARC)+dotO();
+        X.forEach(function(p,k){g+=handle(k,p,nm[k],cols[k])});
+        var ro=row(CEN,'∠AOB, sudut pusat',fmt(aob))+row(C1,'∠ACB',fmt(vals[0]))+row(C2,'∠ADB',fmt(vals[1]))+row(C3,'∠AEB',fmt(vals[2]));
+        return {svg:g,ro:ro};
+      }
+    },
+    diameter:{
+      aria:'Lingkaran dengan diameter AB dan titik C pada keliling',
+      cap:'Geser titik C di sepanjang lingkaran. Garis AB adalah diameter.',
+      init:function(){return {pts:[125]}},
+      apply:function(s,i,t){s.pts[0]=clampDiam(t)},
+      draw:function(s){
+        var A=P(180),B=P(0),C=P(s.pts[0]);
+        var acb=angleAt(C,A,B), cab=Math.round(angleAt(A,C,B)), abc=90-cab;
+        var u=unit(C,A), v=unit(C,B), k=16;
+        var p1={x:C.x+k*u.x,y:C.y+k*u.y}, p2={x:p1.x+k*v.x,y:p1.y+k*v.y}, p3={x:C.x+k*v.x,y:C.y+k*v.y};
+        var w={x:u.x+v.x,y:u.y+v.y}, wl=Math.hypot(w.x,w.y)||1;
+        var tx=C.x+38*w.x/wl, ty=C.y+38*w.y/wl+4;
+        var g=ring()+line(A,B,CEN,3.5)+line(C,A,C1)+line(C,B,C1)
+          +'<path d="M'+C.x+' '+C.y+' L'+p1.x+' '+p1.y+' L'+p2.x+' '+p2.y+' L'+p3.x+' '+p3.y+' Z" style="fill:'+C1+';fill-opacity:.3;stroke:'+C1+';stroke-width:2"/>'
+          +'<text class="deg" x="'+tx+'" y="'+ty+'" text-anchor="middle" style="fill:'+C1+'">'+fmt(acb)+'</text>'
+          +wedge(A,C,B,34,C2,cab+'°')+wedge(B,A,C,34,C3,abc+'°')
+          +dot(A,'A',ARC)+dot(B,'B',ARC)+dotO()+handle(0,C,'C',C1);
+        var ro=row(C1,'∠ACB, menghadap diameter AB',fmt(acb))+row(C2,'∠CAB',cab+'°')+row(C3,'∠ABC',abc+'°')+row('var(--ink)','∠CAB + ∠ABC',(cab+abc)+'°');
+        return {svg:g,ro:ro};
+      }
+    },
+    cyclic:{
+      aria:'Segi empat tali busur ABCD pada lingkaran',
+      cap:'Geser titik A, B, C, atau D di sepanjang lingkaran. Urutan titik tetap A, B, C, D.',
+      init:function(){return {pts:[150,230,320,410]}},
+      apply:function(s,i,t){applyCyc(s,i,t)},
+      meas:function(s){
+        var t=s.pts;
+        var A=Math.round((t[3]-t[1])/2), B=Math.round((t[0]+360-t[2])/2);
+        return {A:A,B:B,C:180-A,D:180-B};
+      },
+      draw:function(s){
+        var V=s.pts.map(function(t){return P(t)}), nm=['A','B','C','D'];
+        var m=this.meas(s), ang=[m.A,m.B,m.C,m.D], col=[C2,C3,C2,C3];
+        var g=ring()+'<polygon points="'+V.map(function(p){return p.x+','+p.y}).join(' ')+'" style="fill:'+ARC+';fill-opacity:.1;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round"/>';
+        V.forEach(function(p,i){g+=wedge(p,V[(i+3)%4],V[(i+1)%4],24,col[i],ang[i]+'°')});
+        V.forEach(function(p,i){g+=handle(i,p,nm[i],col[i])});
+        g+=dotO();
+        var ro=row(C2,'∠A + ∠C',m.A+'° + '+m.C+'° = '+(m.A+m.C)+'°')+row(C3,'∠B + ∠D',m.B+'° + '+m.D+'° = '+(m.B+m.D)+'°');
+        return {svg:g,ro:ro};
+      },
+      rec:{
+        head:['No.','∠A','∠B','∠C','∠D','∠A+∠C','∠B+∠D'],
+        row:function(s,n){var m=modes.cyclic.meas(s);return [n,m.A+'°',m.B+'°',m.C+'°',m.D+'°',(m.A+m.C)+'°',(m.B+m.D)+'°']}
+      }
+    }
+  };
+
+  /* ---------- komponen eksplorasi ---------- */
+  function Explorer(root){
+    var m=modes[root.dataset.mode], s=m.init(), drag=null, focusIdx=null, rows=[], counter=0;
+    root.innerHTML='<div class="lab"><div class="fw"><svg class="fig" viewBox="0 0 400 390" role="group" aria-label="'+m.aria+'"></svg><p class="cap">'+m.cap+'</p></div>'
+      +'<div class="side"><div class="ros"></div><div class="ctl"></div><div class="rec"></div></div></div>';
+    var svg=root.querySelector('svg'), ros=root.querySelector('.ros'), ctl=root.querySelector('.ctl'), rec=root.querySelector('.rec');
+    var slider=null;
+
+    if(m.slider){
+      ctl.innerHTML='<label class="sl"><span>'+m.slider+'</span><input type="range" min="20" max="170" step="2" value="'+s.phi+'"></label>';
+      slider=ctl.querySelector('input');
+      slider.addEventListener('input',function(){s.phi=+slider.value;m.reclamp(s);render()});
+    }
+    var rs=document.createElement('button');
+    rs.type='button'; rs.className='btn ghost sm'; rs.textContent='Kembalikan posisi';
+    rs.addEventListener('click',function(){s=m.init();if(slider)slider.value=s.phi;render()});
+    ctl.appendChild(rs);
+
+    function renderRows(){
+      var tb=rec.querySelector('tbody');
+      if(!tb) return;
+      tb.innerHTML=rows.length?rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>'}).join('')+'</tr>'}).join('')
+        :'<tr><td class="empty" colspan="'+m.rec.head.length+'">Belum ada catatan. Atur posisi, lalu tekan “Catat pengamatan”.</td></tr>';
+      root.dataset.rec=rows.length;
+    }
+    if(m.rec){
+      rec.innerHTML='<button type="button" class="btn sm add">Catat pengamatan</button> <button type="button" class="btn ghost sm clr">Hapus catatan</button>'
+        +'<div class="tw"><table class="tbl"><thead><tr>'+m.rec.head.map(function(h){return '<th>'+h+'</th>'}).join('')+'</tr></thead><tbody></tbody></table></div>';
+      rec.querySelector('.add').addEventListener('click',function(){
+        counter++; rows.push(m.rec.row(s,counter)); if(rows.length>8) rows.shift(); renderRows();
+      });
+      rec.querySelector('.clr').addEventListener('click',function(){rows=[];counter=0;renderRows()});
+      renderRows();
+    }
+
+    function render(){
+      var d=m.draw(s);
+      svg.innerHTML=d.svg; ros.innerHTML=d.ro;
+      if(focusIdx!==null){
+        var el=svg.querySelector('[data-h="'+focusIdx+'"]');
+        if(el) el.focus({preventScroll:true});
+      }
+    }
+    function pointerAngle(e){
+      var pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+      var q=pt.matrixTransform(svg.getScreenCTM().inverse());
+      return norm(deg(Math.atan2(CY-q.y,q.x-CX)));
+    }
+    svg.addEventListener('pointerdown',function(e){
+      var h=e.target.closest('[data-h]'); if(!h) return;
+      drag=+h.dataset.h; focusIdx=null;
+      try{svg.setPointerCapture(e.pointerId)}catch(err){}
+      e.preventDefault();
+    });
+    svg.addEventListener('pointermove',function(e){
+      if(drag===null) return;
+      m.apply(s,drag,pointerAngle(e)); render();
+    });
+    ['pointerup','pointercancel'].forEach(function(ev){svg.addEventListener(ev,function(){drag=null})});
+    svg.addEventListener('keydown',function(e){
+      var h=e.target.closest('[data-h]'); if(!h) return;
+      var d=0, step=e.shiftKey?10:2;
+      if(e.key==='ArrowLeft'||e.key==='ArrowDown') d=-step;
+      else if(e.key==='ArrowRight'||e.key==='ArrowUp') d=step;
+      else return;
+      e.preventDefault();
+      var i=+h.dataset.h; focusIdx=i;
+      m.apply(s,i,s.pts[i]+d); render();
+    });
+    render();
+  }
+  document.querySelectorAll('.explorer').forEach(Explorer);
+
+  /* ---------- gambar statis ---------- */
+  document.getElementById('hero').innerHTML=modes.central.draw({phi:100,pts:[270],static:true}).svg;
+  (function(){
+    var A=P(180),B=P(0),C=P(100);
+    document.getElementById('chal').innerHTML=ring()+line(A,B,CEN,3)+line(O,C,CEN,3)+line(A,C,C1)+line(B,C,C1)
+      +wedge(O,A,C,34,CEN,'80°')+dot(A,'A',ARC)+dot(B,'B',ARC)+dot(C,'C',C1)+dotO();
+  })();
+
+  /* ---------- pertanyaan dan pemeriksaan ---------- */
+  var qs=[].slice.call(document.querySelectorAll('.q')), solved={}, solvedCount=0;
+  var fill=document.getElementById('barfill'), lab=document.getElementById('proglabel'), pb=document.querySelector('.prog .bar');
+  function updProg(){
+    var pct=qs.length?Math.round(solvedCount/qs.length*100):0;
+    fill.style.width=pct+'%'; lab.textContent=solvedCount+' dari '+qs.length; pb.setAttribute('aria-valuenow',pct);
+  }
+  function parseNum(v){
+    v=String(v).trim().replace(',','.');
+    if(/^-?\d+(\.\d+)?\/\d+(\.\d+)?$/.test(v)){var p=v.split('/');return parseFloat(p[0])/parseFloat(p[1])}
+    if(v==='') return NaN;
+    return Number(v);
+  }
+  qs.forEach(function(q){
+    var id=q.dataset.id, tries=0;
+    var fb=q.querySelector('.fb'), hint=q.querySelector('.hint'), rev=q.querySelector('.reveal'), hb=q.querySelector('.hintbtn');
+    if(hb&&hint) hb.addEventListener('click',function(){hint.hidden=!hint.hidden});
+    function win(){
+      if(!solved[id]){solved[id]=true;solvedCount++;updProg()}
+      q.classList.add('done'); fb.className='fb good'; fb.textContent='Tepat! Baca pembahasannya di bawah.';
+      if(rev) rev.hidden=false; if(hint) hint.hidden=true;
+    }
+    function lose(){
+      tries++; fb.className='fb miss';
+      if(tries>=3){fb.textContent='Belum tepat. Pembahasan dibuka agar kamu bisa menelusuri langkahnya.'; if(rev) rev.hidden=false}
+      else fb.textContent='Belum tepat. Coba lagi, atau buka petunjuk.';
+    }
+    if(q.dataset.type==='choice'){
+      q.querySelectorAll('.opt').forEach(function(b){
+        b.addEventListener('click',function(){
+          if(solved[id]) return;
+          if(b.dataset.v===q.dataset.ans){b.classList.add('ok');q.querySelectorAll('.opt').forEach(function(o){o.disabled=true});win()}
+          else{b.classList.add('bad');b.disabled=true;lose()}
+        });
+      });
+    }else{
+      var btn=q.querySelector('.check');
+      btn.addEventListener('click',function(){
+        if(solved[id]) return;
+        var els=[].slice.call(q.querySelectorAll('[data-ans]')), all=true, empty=false;
+        els.forEach(function(el){
+          var v=el.value, ok;
+          if(String(v).trim()===''){empty=true;ok=false;el.classList.remove('ok','bad');return}
+          if(el.tagName==='SELECT') ok=(v===el.dataset.ans);
+          else ok=Math.abs(parseNum(v)-parseFloat(el.dataset.ans))<0.01;
+          el.classList.toggle('ok',ok); el.classList.toggle('bad',!ok);
+          if(!ok) all=false;
+        });
+        if(empty){fb.className='fb miss';fb.textContent='Isi semua kolom dulu, lalu tekan Periksa.';return}
+        if(all){els.forEach(function(el){el.disabled=true});win()} else lose();
+      });
+    }
+  });
+  updProg();
+
+  /* ---------- ringkasan hasil ---------- */
+  var mk=document.getElementById('mk'), cp=document.getElementById('cp'), sum=document.getElementById('sum'), msg=document.getElementById('cpmsg');
+  function val(id){return (document.getElementById(id).value||'').trim()||'-'}
+  function build(){
+    var L=['LKPD Sudut Pusat dan Sudut Keliling Lingkaran','Nama: '+val('nm'),'Kelas: '+val('kl'),'Kelompok: '+val('kp'),'Tanggal: '+val('tg'),'',
+      'Jawaban benar: '+solvedCount+' dari '+qs.length];
+    var ex=[].map.call(document.querySelectorAll('.explorer'),function(e){return +(e.dataset.rec||0)});
+    L.push('Catatan pengamatan: Kegiatan 1 ('+(ex[0]||0)+'), Kegiatan 4 ('+(ex[3]||0)+')');
+    var works=[].filter.call(document.querySelectorAll('.work'),function(w){return w.value.trim()});
+    if(works.length){L.push('','Langkah penyelesaian:');works.forEach(function(w){L.push('['+w.dataset.label+'] '+w.value.trim())})}
+    var names=['Membedakan sudut pusat dan sudut keliling','Menentukan hubungan kedua sudut','Memakai sifat sudut keliling'];
+    L.push('','Refleksi:');
+    names.forEach(function(n,i){var r=document.querySelector('input[name="r'+(i+1)+'"]:checked');L.push('- '+n+': '+(r?r.value:'-'))});
+    L.push('Hal baru yang dipelajari: '+val('rf1'),'Bagian yang membingungkan: '+val('rf2'));
+    return L.join('\n');
+  }
+  mk.addEventListener('click',function(){
+    sum.value=build(); sum.hidden=false; cp.hidden=false; msg.textContent='Ringkasan siap. Salin lalu kirim ke gurumu.';
+  });
+  cp.addEventListener('click',function(){
+    function fallback(){sum.focus();sum.select();try{document.execCommand('copy');msg.textContent='Ringkasan tersalin.'}catch(e){msg.textContent='Tekan dan tahan teks, lalu pilih Salin.'}}
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(sum.value).then(function(){msg.textContent='Ringkasan tersalin.'},fallback);
+    }else fallback();
+  });
+})();
+</script>
+</body>
+</html>
